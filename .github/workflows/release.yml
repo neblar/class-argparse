@@ -14,7 +14,7 @@ permissions:
   id-token: write
 
 jobs:
-  releast:
+  release:
     name: 🚀 Publish
     runs-on: ubuntu-latest
     permissions:
@@ -22,8 +22,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Install build tools
-        run: pip install build twine
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.10
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pylint build tools
+      - name: Lint files
+        run: pylint class_argparse
       - name: Build distribution
         run: python3 -m build
         env:
