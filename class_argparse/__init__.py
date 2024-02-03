@@ -1,6 +1,7 @@
 import asyncio
 import inspect
 from argparse import ArgumentParser
+import typing
 
 
 class ClassArgParser(ArgumentParser):
@@ -33,9 +34,13 @@ class ClassArgParser(ArgumentParser):
         for (_, v) in inspect.getmembers(ArgumentParser(), predicate=inspect.ismethod)
     ]
 
-    def __init__(self, name) -> None:
-        self.__parser = ArgumentParser(name)
-        self.__subparsers = self.__parser.add_subparsers(dest="action", required=True)
+    def __init__(self, name, **kwargs) -> None:
+        super().__init__(name, **kwargs)
+        self.__subparsers = self.add_subparsers(
+            dest="action",
+            required=True,
+            parser_class=ArgumentParser,
+        )
         self.__add_parsers__()
 
     def __add_parsers__(self):
@@ -62,10 +67,14 @@ class ClassArgParser(ArgumentParser):
         annotations = argpsec.annotations
         for arg_name in args:
             arg_type = annotations[arg_name]
-            method_parser.add_argument(arg_name, type=arg_type)
+            if typing.get_origin(arg_type) == typing.Literal:
+                choices = typing.get_args(arg_type)
+                method_parser.add_argument(arg_name, choices=choices)
+            else:
+                method_parser.add_argument(arg_name, type=arg_type)
 
     def __call__(self):
-        args = self.__parser.parse_args()
+        args = self.parse_args()
         variables = vars(args)
         action_name = variables["action"]
         del variables["action"]
