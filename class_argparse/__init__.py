@@ -12,7 +12,7 @@ class ClassArgParser(ArgumentParser):
     class Main(ClassArgParser):
 
         def __init__(self) -> None:
-            super().__init__(name="Automatic Parser")
+            super().__init__(name="Class ArgParser")
 
         async def foo(self, first: str):
             print(f"foo, first={first}")
@@ -27,6 +27,7 @@ class ClassArgParser(ArgumentParser):
         Main()()
     ```
     """
+
     __argparse_members = [
         v.__name__
         for (_, v) in inspect.getmembers(ArgumentParser(), predicate=inspect.ismethod)

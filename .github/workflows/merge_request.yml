@@ -2,20 +2,21 @@ concurrency:
   group: ${{ github.ref }}
   cancel-in-progress: true
 
-name: Publish
+name: Merge Request Checks
 on:
-  release:
-    types: [created]
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
 permissions:
   actions: write
   contents: read
   checks: write
   pull-requests: write
-  id-token: write
 
 jobs:
   release:
-    name: 🚀 Publish
+    name: 🔬 Test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -35,5 +36,3 @@ jobs:
         run: pipenv run python -m build
         env:
           RELEASE_VERSION: ${{github.ref_name}}
-      - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1

@@ -8,7 +8,7 @@ Class based argument parser to simplify writing CLIs that have lots of options
 class Main(ClassArgParser):
 
     def __init__(self) -> None:
-        super().__init__(name="Automatic Parser")
+        super().__init__(name="Class ArgParser")
 
     async def foo(self, first: str):
         print(f"foo, first={first}")
