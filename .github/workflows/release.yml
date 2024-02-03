@@ -1,0 +1,32 @@
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+name: Publish
+on:
+  release:
+    types: [created]
+permissions:
+  actions: write
+  contents: read
+  checks: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  releast:
+    name: 🚀 Publish
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install build tools
+        run: pip install build twine
+      - name: Build distribution
+        run: python3 -m build
+        env:
+          RELEASE_VERSION: ${{github.ref_name}}
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
