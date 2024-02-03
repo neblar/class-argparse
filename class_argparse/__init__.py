@@ -23,6 +23,15 @@ class ClassArgParser(ArgumentParser):
         def some_args(self, arg: str):
             print("some_args", arg)
 
+        def default_values(self, arg: str, default: int = 0):
+            print("default_values", arg, default)
+
+        def list_values(self, values: List[str]):
+            print("list_values", values)
+
+        def untyped_arg(self, untyped):
+            print("untyped_arg", untyped)
+
         async def async_func(self, arg: str):
             print("async_func", arg)
 
@@ -54,7 +63,7 @@ class ClassArgParser(ArgumentParser):
             member_name = member.__name__
             if self.__allowed_member_name(member_name):
                 # public functions only, __ functions are either private or dunder
-                argpsec = inspect.getfullargspec(member)
+                argpsec = inspect.signature(member)
                 self.__add_method_parser__(member_name, argpsec)
 
     def __allowed_member_name(self, member_name: str):
@@ -66,17 +75,35 @@ class ClassArgParser(ArgumentParser):
             return False
         return True
 
-    def __add_method_parser__(self, member_name: str, argpsec: inspect.FullArgSpec):
+    def __add_method_parser__(self, member_name: str, argpsec: inspect.Signature):
         method_parser = self.__subparsers.add_parser(member_name)
-        args = argpsec.args[1:]
-        annotations = argpsec.annotations
-        for arg_name in args:
-            arg_type = annotations[arg_name]
-            if typing.get_origin(arg_type) == typing.Literal:
-                choices = typing.get_args(arg_type)
-                method_parser.add_argument(arg_name, choices=choices)
-            else:
-                method_parser.add_argument(arg_name, type=arg_type)
+        for arg_name, signature in argpsec.parameters.items():
+            self.__add_argument__(
+                parser=method_parser, arg_name=arg_name, signature=signature
+            )
+
+    def __add_argument__(
+        self,
+        parser: ArgumentParser,
+        arg_name: str,
+        signature: inspect.Parameter,
+    ):
+        has_default = signature.default is not inspect._empty
+        default_value = signature.default if has_default else None
+        arg_name = f"--{arg_name}" if has_default else arg_name
+        arg_type = signature.annotation
+        if typing.get_origin(arg_type) == typing.Literal:
+            choices = typing.get_args(arg_type)
+            parser.add_argument(arg_name, choices=choices, default=default_value)
+        elif typing.get_origin(arg_type) == list:
+            list_type = typing.get_args(arg_type)[0]
+            parser.add_argument(
+                arg_name, type=list_type, nargs="*", default=default_value
+            )
+        elif arg_type is not inspect._empty:
+            parser.add_argument(arg_name, type=arg_type, default=default_value)
+        else:
+            parser.add_argument(arg_name, default=default_value)
 
     def __call__(self):
         args = self.parse_args()

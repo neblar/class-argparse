@@ -18,6 +18,15 @@ class Main(ClassArgParser):
     def some_args(self, arg: str):
         print("some_args", arg)
 
+    def default_values(self, arg: str, default: int = 0):
+        print("default_values", arg, default)
+
+    def list_values(self, values: List[str]):
+        print("list_values", values)
+
+    def untyped_arg(self, untyped):
+        print("untyped_arg", untyped)
+
     async def async_func(self, arg: str):
         print("async_func", arg)
 
