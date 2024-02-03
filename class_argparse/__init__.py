@@ -10,19 +10,24 @@ class ClassArgParser(ArgumentParser):
 
     Usage
     ```
+    from typing import Literal
+
     class Main(ClassArgParser):
 
         def __init__(self) -> None:
             super().__init__(name="Class ArgParser")
 
-        async def foo(self, first: str):
-            print(f"foo, first={first}")
+        def no_args(self):
+            print("no_args")
 
-        def bar(self):
-            print("bar")
+        def some_args(self, arg: str):
+            print("some_args", arg)
 
-        async def baz(self, first: str, second: int):
-            print(f"baz, first={first}, second={second}")
+        async def async_func(self, arg: str):
+            print("async_func", arg)
+
+        def literal_options(self, arg: Literal["a", "b"]):
+            print("literal_options", arg)
 
     if __name__ == "__main__":
         Main()()
