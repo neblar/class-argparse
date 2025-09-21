@@ -5,7 +5,8 @@ import typing
 
 
 class FormatterClass(typing.Protocol):
-    def __call__(self, *, prog: str) -> HelpFormatter: ...  # noqa: E704, copied code
+    def __call__(self, *, prog: str) -> HelpFormatter:
+        ...  # noqa: E704, copied code
 
 
 class ClassArgParser(ArgumentParser):
