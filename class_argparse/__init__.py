@@ -1,7 +1,11 @@
 import asyncio
+from argparse import ArgumentParser, HelpFormatter, RawDescriptionHelpFormatter
 import inspect
-from argparse import ArgumentParser
 import typing
+
+
+class FormatterClass(typing.Protocol):
+    def __call__(self, *, prog: str) -> HelpFormatter: ...  # noqa: E704, copied code
 
 
 class ClassArgParser(ArgumentParser):
@@ -48,8 +52,18 @@ class ClassArgParser(ArgumentParser):
         for (_, v) in inspect.getmembers(ArgumentParser(), predicate=inspect.ismethod)
     ]
 
-    def __init__(self, name, **kwargs) -> None:
-        super().__init__(name, **kwargs)
+    def __init__(
+        self,
+        name,
+        formatter_class: FormatterClass = RawDescriptionHelpFormatter,
+        **kwargs,
+    ) -> None:
+        super().__init__(
+            name,
+            description=self.__class__.__doc__,
+            formatter_class=formatter_class,
+            **kwargs,
+        )
         self.__subparsers = self.add_subparsers(
             dest="action",
             required=True,
@@ -64,7 +78,7 @@ class ClassArgParser(ArgumentParser):
             if self.__allowed_member_name(member_name):
                 # public functions only, __ functions are either private or dunder
                 argpsec = inspect.signature(member)
-                self.__add_method_parser__(member_name, argpsec)
+                self.__add_method_parser__(member_name, argpsec, member.__doc__)
 
     def __allowed_member_name(self, member_name: str):
         if member_name.startswith("__"):
@@ -75,11 +89,22 @@ class ClassArgParser(ArgumentParser):
             return False
         return True
 
-    def __add_method_parser__(self, member_name: str, argpsec: inspect.Signature):
-        method_parser = self.__subparsers.add_parser(member_name)
+    def __add_method_parser__(
+        self,
+        member_name: str,
+        argpsec: inspect.Signature,
+        desc: str | None,
+    ):
+        method_parser = self.__subparsers.add_parser(
+            member_name,
+            description=desc,
+            formatter_class=self.formatter_class,
+        )
         for arg_name, signature in argpsec.parameters.items():
             self.__add_argument__(
-                parser=method_parser, arg_name=arg_name, signature=signature
+                parser=method_parser,
+                arg_name=arg_name,
+                signature=signature,
             )
 
     def __add_argument__(
